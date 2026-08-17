@@ -1,143 +1,354 @@
+/* ===== إعادة تعيين واستيراد ===== */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* ===== المتغيرات العامة ===== */
+:root {
+    --primary: #4299e1;
+    --primary-dark: #2b6cb0;
+    --primary-light: #ebf8ff;
+    --success: #38a169;
+    --success-light: #f0fff4;
+    --danger: #e53e3e;
+    --danger-light: #fff5f5;
+    --warning: #d69e2e;
+    --warning-light: #fffff0;
+    --orange: #dd6b20;
+    --gray-50: #f7fafc;
+    --gray-100: #edf2f7;
+    --gray-200: #e2e8f0;
+    --gray-300: #cbd5e0;
+    --gray-600: #718096;
+    --gray-700: #4a5568;
+    --gray-800: #2d3748;
+    --gray-900: #1a202c;
+    --shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    --radius: 20px;
+    --transition: 0.3s ease;
+}
+
+/* ===== الجسم والخلفية ===== */
 body {
-    font-family: Arial, sans-serif;
-    background: #0f0c29;
+    background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+    padding: 20px;
     min-height: 100vh;
     display: flex;
     justify-content: center;
-    align-items: center;
-    padding: 20px;
+    align-items: flex-start;
 }
 
+/* ===== الحاوية الرئيسية ===== */
 .container {
-    background: #1a1a3e;
-    border-radius: 20px;
-    padding: 40px;
-    max-width: 600px;
+    max-width: 1200px;
     width: 100%;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    background: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 30px;
+    margin-top: 20px;
+    animation: slideUp 0.5s ease;
 }
 
-h1 {
-    color: #ffffff;
-    text-align: center;
-    font-size: 2rem;
+/* ===== الهيدر ===== */
+header {
+    margin-bottom: 25px;
 }
 
-.sub {
-    color: #a78bfa;
-    text-align: center;
-    margin-bottom: 30px;
+header h1 {
+    color: var(--gray-900);
+    border-bottom: 3px solid var(--primary);
+    padding-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 28px;
 }
 
-.tabs {
+.subtitle {
+    color: var(--gray-700);
+    margin-top: 12px;
+    font-size: 15px;
+}
+
+/* ===== شبكة البطاقات ===== */
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 800px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ===== البطاقة ===== */
+.card {
+    background: var(--gray-50);
+    border-radius: 14px;
+    padding: 18px 20px;
+    border: 2px solid var(--gray-200);
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--gray-300);
+    transition: var(--transition);
+}
+
+.card:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(66, 153, 225, 0.15);
+}
+
+.card:hover::before {
+    background: var(--primary);
+}
+
+/* ===== عنوان البطاقة ===== */
+.card h3 {
+    color: var(--gray-800);
+    font-size: 16px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* ===== شارة نوع الطلب ===== */
+.method {
+    background: var(--gray-600);
+    color: white;
+    padding: 3px 14px;
+    border-radius: 30px;
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+.method.get {
+    background: var(--success);
+}
+
+.method.post {
+    background: var(--warning);
+}
+
+.method.put {
+    background: var(--orange);
+}
+
+.method.delete {
+    background: var(--danger);
+}
+
+/* ===== رابط الـ URL ===== */
+.url {
+    font-family: 'Courier New', monospace;
+    background: var(--gray-100);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--gray-800);
+    margin: 6px 0;
+    word-break: break-all;
+    border: 1px solid var(--gray-200);
+    direction: ltr;
+    text-align: left;
+}
+
+/* ===== بيانات الـ Body ===== */
+.body-data {
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    background: var(--gray-100);
+    padding: 5px 10px;
+    border-radius: 6px;
+    margin: 4px 0;
+    border: 1px solid var(--gray-200);
+    color: var(--gray-700);
+    direction: ltr;
+    text-align: left;
+}
+
+/* ===== منطقة الاستجابة ===== */
+.response {
+    background: var(--gray-900);
+    color: var(--gray-300);
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    white-space: pre-wrap;
+    margin-top: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+    line-height: 1.6;
+    direction: ltr;
+    text-align: left;
+}
+
+/* تلوين النجاح والفشل */
+.response .success {
+    color: #68d391;
+}
+
+.response .error {
+    color: #fc8181;
+}
+
+/* شريط التمرير المخصص */
+.response::-webkit-scrollbar {
+    width: 6px;
+}
+
+.response::-webkit-scrollbar-track {
+    background: var(--gray-800);
+    border-radius: 10px;
+}
+
+.response::-webkit-scrollbar-thumb {
+    background: var(--gray-600);
+    border-radius: 10px;
+}
+
+/* ===== الأزرار والشارات ===== */
+.flex {
     display: flex;
     gap: 10px;
-    margin-bottom: 30px;
+    flex-wrap: wrap;
+    align-items: center;
 }
 
-.tab {
-    flex: 1;
-    padding: 12px;
-    border: 2px solid #4a3a8a;
-    border-radius: 12px;
-    background: #2a1a5e;
-    color: #ffffff;
-    font-size: 1rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: 0.3s;
+.mt-2 {
+    margin-top: 10px;
 }
 
-.tab:hover {
-    background: #4a2a8e;
-    border-color: #7c3aed;
-}
-
-.tab.active {
-    background: #7c3aed;
-    border-color: #7c3aed;
-    color: #ffffff;
-}
-
-.page {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 16px;
-    padding: 25px;
-}
-
-.page.hidden {
-    display: none;
-}
-
-.page h2 {
-    color: #ffffff;
-    margin-bottom: 20px;
-    font-size: 1.2rem;
-}
-
-input {
-    width: 100%;
-    padding: 14px 16px;
-    border-radius: 10px;
-    border: 2px solid #3a2a7a;
-    background: #0f0a2a;
-    color: #ffffff;
-    font-size: 1rem;
-    margin-bottom: 12px;
-}
-
-input::placeholder {
-    color: #8888bb;
-}
-
-input:focus {
-    outline: none;
-    border-color: #7c3aed;
-    background: #1a0a3e;
-}
-
-button {
-    width: 100%;
-    padding: 14px;
+.btn-test {
+    background: var(--primary);
+    color: white;
     border: none;
-    border-radius: 10px;
-    background: #7c3aed;
-    color: #ffffff;
-    font-size: 1rem;
-    font-weight: bold;
+    padding: 7px 20px;
+    border-radius: 30px;
+    font-size: 13px;
     cursor: pointer;
-    transition: 0.3s;
+    transition: var(--transition);
+    font-weight: 500;
 }
 
-button:hover {
-    background: #6d28d9;
+.btn-test:hover {
+    background: var(--primary-dark);
     transform: scale(1.02);
+    box-shadow: 0 2px 8px rgba(66, 153, 225, 0.4);
 }
 
-pre {
-    margin-top: 15px;
-    padding: 15px;
-    border-radius: 10px;
-    background: #0f0a2a;
-    color: #e8ecf0;
-    font-size: 0.85rem;
-    white-space: pre-wrap;
-    word-break: break-word;
-    min-height: 50px;
-    border: 1px solid #2a1a5e;
+.btn-test:active {
+    transform: scale(0.98);
 }
 
-pre.success {
-    border-right: 4px solid #34d399;
+.badge {
+    display: inline-block;
+    background: var(--gray-200);
+    padding: 2px 14px;
+    border-radius: 30px;
+    font-size: 11px;
+    color: var(--gray-700);
+    font-weight: 500;
 }
 
-pre.error {
-    border-right: 4px solid #f87171;
-    color: #f87171;
+/* ===== الفوتر ===== */
+.footer {
+    margin-top: 30px;
+    text-align: center;
+    color: var(--gray-600);
+    font-size: 14px;
+    border-top: 1px solid var(--gray-200);
+    padding-top: 20px;
+}
+
+/* ===== الرسوم المتحركة ===== */
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===== تحسينات إضافية ===== */
+.card .response .json-key {
+    color: #f6ad55;
+}
+
+.card .response .json-string {
+    color: #68d391;
+}
+
+.card .response .json-number {
+    color: #63b3ed;
+}
+
+.card .response .json-boolean {
+    color: #fc8181;
+}
+
+/* ===== وضعية الـ Dark ===== */
+@media (prefers-color-scheme: dark) {
+    body {
+        background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+    }
+    
+    .container {
+        background: #2d3748;
+    }
+    
+    header h1 {
+        color: #f7fafc;
+    }
+    
+    .subtitle {
+        color: #a0aec0;
+    }
+    
+    .card {
+        background: #1a202c;
+        border-color: #4a5568;
+    }
+    
+    .card h3 {
+        color: #e2e8f0;
+    }
+    
+    .url, .body-data {
+        background: #2d3748;
+        border-color: #4a5568;
+        color: #a0aec0;
+    }
+    
+    .badge {
+        background: #4a5568;
+        color: #e2e8f0;
+    }
+    
+    .footer {
+        color: #a0aec0;
+        border-color: #4a5568;
+    }
 }
