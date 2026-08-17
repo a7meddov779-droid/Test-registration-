@@ -1,6 +1,14 @@
-const API = 'https://al-coral.vercel.app';
+// ===== استخدم واحد منهم =====
+// الخيار 1 (جرب هذا أولاً)
+const API = 'https://corsproxy.io/?https://al-coral.vercel.app';
 
-// ===== التبويبات =====
+// الخيار 2 (بديل)
+// const API = 'https://api.allorigins.win/raw?url=https://al-coral.vercel.app';
+
+// الخيار 3 (بديل آخر)
+// const API = 'https://thingproxy.freeboard.io/fetch/https://al-coral.vercel.app';
+
+// ===== باقي الكود نفس الشي =====
 const tabSignup = document.getElementById('tabSignup');
 const tabLogin = document.getElementById('tabLogin');
 const tabUsers = document.getElementById('tabUsers');
@@ -10,17 +18,14 @@ const pageLogin = document.getElementById('pageLogin');
 const pageUsers = document.getElementById('pageUsers');
 
 function showTab(tabName) {
-    // إخفاء الكل
     pageSignup.classList.add('hidden');
     pageLogin.classList.add('hidden');
     pageUsers.classList.add('hidden');
     
-    // إزالة التفعيل من الكل
     tabSignup.classList.remove('active');
     tabLogin.classList.remove('active');
     tabUsers.classList.remove('active');
     
-    // إظهار المطلوب
     if (tabName === 'signup') {
         pageSignup.classList.remove('hidden');
         tabSignup.classList.add('active');
@@ -127,3 +132,4 @@ document.getElementById('btnUsers').addEventListener('click', async function() {
 });
 
 console.log('✅ API Tester Ready');
+console.log(`📡 API: ${API}`);
