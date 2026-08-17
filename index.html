@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>اختبار الـ API</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+    <div class="container">
+        <h1>🚀 اختبار الـ API</h1>
+        <p class="subtitle">https://al-coral.vercel.app</p>
+
+        <!-- تبويبات -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="signup">📝 إنشاء حساب</button>
+            <button class="tab-btn" data-tab="login">🔐 تسجيل الدخول</button>
+            <button class="tab-btn" data-tab="users">👥 عرض المستخدمين</button>
+        </div>
+
+        <!-- محتوى التبويبات -->
+        <div class="tab-content" id="signup">
+            <h2>📝 إنشاء حساب جديد</h2>
+            <form id="signupForm">
+                <input type="text" id="signupName" placeholder="الاسم الكامل" required />
+                <input type="email" id="signupEmail" placeholder="البريد الإلكتروني" required />
+                <input type="password" id="signupPassword" placeholder="كلمة المرور" required />
+                <button type="submit">إنشاء حساب</button>
+            </form>
+            <div id="signupResult" class="result"></div>
+        </div>
+
+        <div class="tab-content hidden" id="login">
+            <h2>🔐 تسجيل الدخول</h2>
+            <form id="loginForm">
+                <input type="email" id="loginEmail" placeholder="البريد الإلكتروني" required />
+                <input type="password" id="loginPassword" placeholder="كلمة المرور" required />
+                <button type="submit">تسجيل الدخول</button>
+            </form>
+            <div id="loginResult" class="result"></div>
+        </div>
+
+        <div class="tab-content hidden" id="users">
+            <h2>👥 قائمة المستخدمين</h2>
+            <button id="fetchUsersBtn">📥 جلب المستخدمين</button>
+            <div id="usersResult" class="result"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
