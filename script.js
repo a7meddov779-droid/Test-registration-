@@ -1,15 +1,44 @@
 const API = 'https://al-coral.vercel.app';
 
 // ===== التبويبات =====
-function showTab(name) {
-    document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.getElementById(name).classList.remove('hidden');
-    event.target.classList.add('active');
+const tabSignup = document.getElementById('tabSignup');
+const tabLogin = document.getElementById('tabLogin');
+const tabUsers = document.getElementById('tabUsers');
+
+const pageSignup = document.getElementById('pageSignup');
+const pageLogin = document.getElementById('pageLogin');
+const pageUsers = document.getElementById('pageUsers');
+
+function showTab(tabName) {
+    // إخفاء الكل
+    pageSignup.classList.add('hidden');
+    pageLogin.classList.add('hidden');
+    pageUsers.classList.add('hidden');
+    
+    // إزالة التفعيل من الكل
+    tabSignup.classList.remove('active');
+    tabLogin.classList.remove('active');
+    tabUsers.classList.remove('active');
+    
+    // إظهار المطلوب
+    if (tabName === 'signup') {
+        pageSignup.classList.remove('hidden');
+        tabSignup.classList.add('active');
+    } else if (tabName === 'login') {
+        pageLogin.classList.remove('hidden');
+        tabLogin.classList.add('active');
+    } else if (tabName === 'users') {
+        pageUsers.classList.remove('hidden');
+        tabUsers.classList.add('active');
+    }
 }
 
+tabSignup.addEventListener('click', () => showTab('signup'));
+tabLogin.addEventListener('click', () => showTab('login'));
+tabUsers.addEventListener('click', () => showTab('users'));
+
 // ===== إنشاء حساب =====
-async function signup() {
+document.getElementById('btnSignup').addEventListener('click', async function() {
     const name = document.getElementById('sName').value;
     const email = document.getElementById('sEmail').value;
     const password = document.getElementById('sPass').value;
@@ -22,6 +51,7 @@ async function signup() {
     }
 
     result.textContent = '⏳ جاري...';
+    result.className = '';
 
     try {
         const res = await fetch(`${API}/signup`, {
@@ -32,6 +62,7 @@ async function signup() {
         const data = await res.json();
         result.className = 'success';
         result.textContent = JSON.stringify(data, null, 2);
+        
         if (data.success) {
             document.getElementById('sName').value = '';
             document.getElementById('sEmail').value = '';
@@ -41,10 +72,10 @@ async function signup() {
         result.className = 'error';
         result.textContent = '❌ خطأ: ' + err.message;
     }
-}
+});
 
 // ===== تسجيل الدخول =====
-async function login() {
+document.getElementById('btnLogin').addEventListener('click', async function() {
     const email = document.getElementById('lEmail').value;
     const password = document.getElementById('lPass').value;
     const result = document.getElementById('lResult');
@@ -56,6 +87,7 @@ async function login() {
     }
 
     result.textContent = '⏳ جاري...';
+    result.className = '';
 
     try {
         const res = await fetch(`${API}/login`, {
@@ -66,6 +98,7 @@ async function login() {
         const data = await res.json();
         result.className = 'success';
         result.textContent = JSON.stringify(data, null, 2);
+        
         if (data.success) {
             document.getElementById('lEmail').value = '';
             document.getElementById('lPass').value = '';
@@ -74,12 +107,13 @@ async function login() {
         result.className = 'error';
         result.textContent = '❌ خطأ: ' + err.message;
     }
-}
+});
 
 // ===== عرض المستخدمين =====
-async function getUsers() {
+document.getElementById('btnUsers').addEventListener('click', async function() {
     const result = document.getElementById('uResult');
     result.textContent = '⏳ جاري...';
+    result.className = '';
 
     try {
         const res = await fetch(`${API}/users`);
@@ -90,6 +124,6 @@ async function getUsers() {
         result.className = 'error';
         result.textContent = '❌ خطأ: ' + err.message;
     }
-}
+});
 
 console.log('✅ API Tester Ready');
