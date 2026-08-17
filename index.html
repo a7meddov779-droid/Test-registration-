@@ -3,22 +3,92 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>نظام إدارة المستخدمين</title>
+    <title>نظام إدارة الحسابات</title>
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>📦 نظام إدارة المستخدمين</h1>
-            <p class="subtitle">💡 جميع العمليات متاحة عبر <strong>GET</strong> و <strong>POST / PUT / DELETE</strong> مع توضيح الاستجابة</p>
-        </header>
+        <!-- شريط التنقل -->
+        <nav class="navbar" id="navbar">
+            <div class="nav-brand">👤 نظام الحسابات</div>
+            <div class="nav-links" id="navLinks">
+                <a href="#" onclick="showPage('home')">🏠 الرئيسية</a>
+                <a href="#" onclick="showPage('users')" id="navUsers">👥 المستخدمين</a>
+                <a href="#" onclick="logout()" id="navLogout">🚪 خروج</a>
+            </div>
+            <div class="nav-user" id="navUser">
+                <span id="userNameDisplay"></span>
+            </div>
+        </nav>
 
-        <div class="grid" id="endpointsContainer">
-            <!-- سيتم ملء البطاقات بواسطة JavaScript -->
+        <!-- الصفحات -->
+        <div id="pageHome" class="page active">
+            <div class="welcome-box">
+                <h2>✨ مرحباً بك في نظام الحسابات</h2>
+                <p>قم بإنشاء حساب جديد أو سجل الدخول للبدء</p>
+            </div>
+
+            <div class="auth-grid">
+                <!-- نموذج إنشاء حساب -->
+                <div class="auth-card">
+                    <h3>📝 إنشاء حساب جديد</h3>
+                    <form id="signupForm" onsubmit="handleSignup(event)">
+                        <input type="text" id="signupName" placeholder="الاسم" required />
+                        <input type="email" id="signupEmail" placeholder="البريد الإلكتروني" required />
+                        <input type="password" id="signupPassword" placeholder="كلمة المرور" required />
+                        <button type="submit">إنشاء حساب</button>
+                    </form>
+                    <div id="signupMessage" class="message"></div>
+                </div>
+
+                <!-- نموذج تسجيل دخول -->
+                <div class="auth-card">
+                    <h3>🔑 تسجيل الدخول</h3>
+                    <form id="loginForm" onsubmit="handleLogin(event)">
+                        <input type="email" id="loginEmail" placeholder="البريد الإلكتروني" required />
+                        <input type="password" id="loginPassword" placeholder="كلمة المرور" required />
+                        <button type="submit">تسجيل دخول</button>
+                    </form>
+                    <div id="loginMessage" class="message"></div>
+                </div>
+            </div>
+
+            <!-- حالة المستخدم -->
+            <div id="userStatus" class="user-status">
+                <div class="status-card">
+                    <span class="status-label">📊 حالة الحساب:</span>
+                    <span id="statusText" class="status-text">❌ غير مسجل دخول</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- صفحة المستخدمين -->
+        <div id="pageUsers" class="page">
+            <div class="users-header">
+                <h2>👥 قائمة المستخدمين</h2>
+                <span id="usersCount" class="count-badge">0</span>
+            </div>
+            <div id="usersList" class="users-list">
+                <div class="empty-state">📭 لا يوجد مستخدمين مسجلين</div>
+            </div>
+        </div>
+
+        <!-- صفحة لوحة التحكم (بعد تسجيل الدخول) -->
+        <div id="pageDashboard" class="page">
+            <div class="dashboard-card">
+                <h2>🎯 لوحة التحكم</h2>
+                <div id="dashboardInfo" class="dashboard-info">
+                    <p>👤 <strong>الاسم:</strong> <span id="dashName"></span></p>
+                    <p>📧 <strong>البريد:</strong> <span id="dashEmail"></span></p>
+                    <p>🆔 <strong>المعرف:</strong> <span id="dashId"></span></p>
+                    <p>📅 <strong>تاريخ التسجيل:</strong> <span id="dashDate"></span></p>
+                </div>
+                <button class="btn-danger" onclick="handleDeleteAccount()">🗑️ حذف الحساب</button>
+            </div>
         </div>
 
         <footer class="footer">
-            ⚡ تم إنشاء الحسابات في الذاكرة مؤقتاً — يتم إعادة ضبطها عند تحديث الصفحة
+            ⚡ نظام إدارة الحسابات — جميع الحقوق محفوظة © 2026
         </footer>
     </div>
 
