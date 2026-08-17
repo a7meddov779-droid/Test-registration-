@@ -1,49 +1,27 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html dir="rtl" lang="ar">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>اختبار API</title>
+    <title>نظام إدارة المستخدمين</title>
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
     <div class="container">
-        <h1>🚀 اختبار API</h1>
-        <p class="sub">https://al-coral.vercel.app</p>
+        <header>
+            <h1>📦 نظام إدارة المستخدمين</h1>
+            <p class="subtitle">💡 جميع العمليات متاحة عبر <strong>GET</strong> و <strong>POST / PUT / DELETE</strong> مع توضيح الاستجابة</p>
+        </header>
 
-        <div class="tabs">
-            <button class="tab active" id="tabSignup">📝 إنشاء حساب</button>
-            <button class="tab" id="tabLogin">🔐 تسجيل دخول</button>
-            <button class="tab" id="tabUsers">👥 المستخدمين</button>
+        <div class="grid" id="endpointsContainer">
+            <!-- سيتم ملء البطاقات بواسطة JavaScript -->
         </div>
 
-        <!-- تسجيل -->
-        <div id="pageSignup" class="page">
-            <h2>إنشاء حساب</h2>
-            <input type="text" id="sName" placeholder="الاسم" />
-            <input type="email" id="sEmail" placeholder="البريد" />
-            <input type="password" id="sPass" placeholder="كلمة المرور" />
-            <button id="btnSignup">تسجيل</button>
-            <pre id="sResult"></pre>
-        </div>
-
-        <!-- دخول -->
-        <div id="pageLogin" class="page hidden">
-            <h2>تسجيل الدخول</h2>
-            <input type="email" id="lEmail" placeholder="البريد" />
-            <input type="password" id="lPass" placeholder="كلمة المرور" />
-            <button id="btnLogin">دخول</button>
-            <pre id="lResult"></pre>
-        </div>
-
-        <!-- مستخدمين -->
-        <div id="pageUsers" class="page hidden">
-            <h2>قائمة المستخدمين</h2>
-            <button id="btnUsers">جلب المستخدمين</button>
-            <pre id="uResult"></pre>
-        </div>
+        <footer class="footer">
+            ⚡ تم إنشاء الحسابات في الذاكرة مؤقتاً — يتم إعادة ضبطها عند تحديث الصفحة
+        </footer>
     </div>
 
-    <script src="script.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
