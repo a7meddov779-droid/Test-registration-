@@ -1,135 +1,172 @@
-// ===== استخدم واحد منهم =====
-// الخيار 1 (جرب هذا أولاً)
-const API = 'https://corsproxy.io/?https://al-coral.vercel.app';
+// إنشاء حساب عبر GET
+app.get('/signup', async (req, res) => {
+  const { name, email, password } = req.query; // من الرابط مباشرة
 
-// الخيار 2 (بديل)
-// const API = 'https://api.allorigins.win/raw?url=https://al-coral.vercel.app';
+  if (!name || !email || !password) {
+    return res.status(400).json({ error: 'جميع الحقول مطلوبة: name, email, password' });
+  }
 
-// الخيار 3 (بديل آخر)
-// const API = 'https://thingproxy.freeboard.io/fetch/https://al-coral.vercel.app';
+  try {
+    const getRes = await axios.get(`https://api.github.com/repos/${USERNAME}/${REPO}/contents/users.json`, {
+      headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
+    });
 
-// ===== باقي الكود نفس الشي =====
-const tabSignup = document.getElementById('tabSignup');
-const tabLogin = document.getElementById('tabLogin');
-const tabUsers = document.getElementById('tabUsers');
+    const content = Buffer.from(getRes.data.content, 'base64').toString('utf-8');
+    const users = JSON.parse(content);
 
-const pageSignup = document.getElementById('pageSignup');
-const pageLogin = document.getElementById('pageLogin');
-const pageUsers = document.getElementById('pageUsers');
-
-function showTab(tabName) {
-    pageSignup.classList.add('hidden');
-    pageLogin.classList.add('hidden');
-    pageUsers.classList.add('hidden');
-    
-    tabSignup.classList.remove('active');
-    tabLogin.classList.remove('active');
-    tabUsers.classList.remove('active');
-    
-    if (tabName === 'signup') {
-        pageSignup.classList.remove('hidden');
-        tabSignup.classList.add('active');
-    } else if (tabName === 'login') {
-        pageLogin.classList.remove('hidden');
-        tabLogin.classList.add('active');
-    } else if (tabName === 'users') {
-        pageUsers.classList.remove('hidden');
-        tabUsers.classList.add('active');
-    }
-}
-
-tabSignup.addEventListener('click', () => showTab('signup'));
-tabLogin.addEventListener('click', () => showTab('login'));
-tabUsers.addEventListener('click', () => showTab('users'));
-
-// ===== إنشاء حساب =====
-document.getElementById('btnSignup').addEventListener('click', async function() {
-    const name = document.getElementById('sName').value;
-    const email = document.getElementById('sEmail').value;
-    const password = document.getElementById('sPass').value;
-    const result = document.getElementById('sResult');
-
-    if (!name || !email || !password) {
-        result.className = 'error';
-        result.textContent = '❌ جميع الحقول مطلوبة';
-        return;
+    if (users.find(u => u.email === email)) {
+      return res.status(400).json({ error: 'الإيميل مستخدم مسبقاً' });
     }
 
-    result.textContent = '⏳ جاري...';
-    result.className = '';
+    const newUser = {
+      id: Date.now(),
+      name,
+      email,
+      password,
+      createdAt: new Date().toISOString()
+    };
 
-    try {
-        const res = await fetch(`${API}/signup`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, email, password })
+    users.push(newUser);
+
+    await axios.put(`https://api.github.com/repos/${USERNAME}/${REPO}/contents/users.json`, {
+      message: 'إضافة مستخدم جديد',
+      content: Buffer.from(JSON.stringify(users, null, 2)).toString('base64'),
+      sha: getRes.data.sha
+    }, {
+      headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
+    });
+
+    res.json({ success: true, message: '✅ تم إنشاء الحساب بنجاح', user: { id: newUser.id, name, email } });
+
+  } catch (error) {
+    if (error.response?.status === 404) {
+      // إنشاء ملف users.json إذا لم يكن موجوداً
+      try {
+        const newUsers = [{
+          id: Date.now(),
+          name,
+          email,
+          password,
+          createdAt: new Date().toISOString()
+        }];
+
+        await axios.put(`https://api.github.com/repos/${USERNAME}/${REPO}/contents/users.json`, {
+          message: 'إنشاء ملف users.json',
+          content: Buffer.from(JSON.stringify(newUsers, null, 2)).toString('base64')
+        }, {
+          headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
         });
-        const data = await res.json();
-        result.className = 'success';
-        result.textContent = JSON.stringify(data, null, 2);
-        
-        if (data.success) {
-            document.getElementById('sName').value = '';
-            document.getElementById('sEmail').value = '';
-            document.getElementById('sPass').value = '';
-        }
-    } catch (err) {
-        result.className = 'error';
-        result.textContent = '❌ خطأ: ' + err.message;
+
+        res.json({ success: true, message: '✅ تم إنشاء الحساب بنجاح', user: { id: newUsers[0].id, name, email } });
+
+      } catch (err) {
+        res.status(500).json({ error: err.message });
+      }
+    } else {
+      res.status(500).json({ error: error.message });
     }
+  }
 });
 
-// ===== تسجيل الدخول =====
-document.getElementById('btnLogin').addEventListener('click', async function() {
-    const email = document.getElementById('lEmail').value;
-    const password = document.getElementById('lPass').value;
-    const result = document.getElementById('lResult');
+// تسجيل الدخول عبر GET
+app.get('/login', async (req, res) => {
+  const { email, password } = req.query;
 
-    if (!email || !password) {
-        result.className = 'error';
-        result.textContent = '❌ البريد وكلمة المرور مطلوبة';
-        return;
+  if (!email || !password) {
+    return res.status(400).json({ error: 'الإيميل وكلمة المرور مطلوبة' });
+  }
+
+  try {
+    const getRes = await axios.get(`https://api.github.com/repos/${USERNAME}/${REPO}/contents/users.json`, {
+      headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
+    });
+
+    const content = Buffer.from(getRes.data.content, 'base64').toString('utf-8');
+    const users = JSON.parse(content);
+    const user = users.find(u => u.email === email && u.password === password);
+
+    if (!user) {
+      return res.status(401).json({ error: '❌ إيميل أو كلمة مرور خاطئة' });
     }
 
-    result.textContent = '⏳ جاري...';
-    result.className = '';
+    res.json({ success: true, message: '✅ تم تسجيل الدخول بنجاح', user: { id: user.id, name: user.name, email: user.email } });
 
-    try {
-        const res = await fetch(`${API}/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-        });
-        const data = await res.json();
-        result.className = 'success';
-        result.textContent = JSON.stringify(data, null, 2);
-        
-        if (data.success) {
-            document.getElementById('lEmail').value = '';
-            document.getElementById('lPass').value = '';
-        }
-    } catch (err) {
-        result.className = 'error';
-        result.textContent = '❌ خطأ: ' + err.message;
+  } catch (error) {
+    if (error.response?.status === 404) {
+      res.status(404).json({ error: '❌ لا يوجد مستخدمين مسجلين' });
+    } else {
+      res.status(500).json({ error: error.message });
     }
+  }
 });
 
-// ===== عرض المستخدمين =====
-document.getElementById('btnUsers').addEventListener('click', async function() {
-    const result = document.getElementById('uResult');
-    result.textContent = '⏳ جاري...';
-    result.className = '';
+// تعديل مستخدم عبر GET
+app.get('/user/:id', async (req, res) => {
+  const userId = parseInt(req.params.id);
+  const { name, email, password } = req.query;
 
-    try {
-        const res = await fetch(`${API}/users`);
-        const data = await res.json();
-        result.className = 'success';
-        result.textContent = JSON.stringify(data, null, 2);
-    } catch (err) {
-        result.className = 'error';
-        result.textContent = '❌ خطأ: ' + err.message;
+  try {
+    const getRes = await axios.get(`https://api.github.com/repos/${USERNAME}/${REPO}/contents/users.json`, {
+      headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
+    });
+
+    const content = Buffer.from(getRes.data.content, 'base64').toString('utf-8');
+    let users = JSON.parse(content);
+    const userIndex = users.findIndex(u => u.id === userId);
+
+    if (userIndex === -1) {
+      return res.status(404).json({ error: 'المستخدم غير موجود' });
     }
+
+    if (name) users[userIndex].name = name;
+    if (email) users[userIndex].email = email;
+    if (password) users[userIndex].password = password;
+
+    await axios.put(`https://api.github.com/repos/${USERNAME}/${REPO}/contents/users.json`, {
+      message: 'تعديل مستخدم',
+      content: Buffer.from(JSON.stringify(users, null, 2)).toString('base64'),
+      sha: getRes.data.sha
+    }, {
+      headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
+    });
+
+    res.json({ success: true, message: 'تم تعديل المستخدم', user: users[userIndex] });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
-console.log('✅ API Tester Ready');
-console.log(`📡 API: ${API}`);
+// حذف مستخدم عبر GET
+app.get('/user/:id/delete', async (req, res) => {
+  const userId = parseInt(req.params.id);
+
+  try {
+    const getRes = await axios.get(`https://api.github.com/repos/${USERNAME}/${REPO}/contents/users.json`, {
+      headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
+    });
+
+    const content = Buffer.from(getRes.data.content, 'base64').toString('utf-8');
+    let users = JSON.parse(content);
+    const userExists = users.find(u => u.id === userId);
+
+    if (!userExists) {
+      return res.status(404).json({ error: 'المستخدم غير موجود' });
+    }
+
+    users = users.filter(u => u.id !== userId);
+
+    await axios.put(`https://api.github.com/repos/${USERNAME}/${REPO}/contents/users.json`, {
+      message: 'حذف مستخدم',
+      content: Buffer.from(JSON.stringify(users, null, 2)).toString('base64'),
+      sha: getRes.data.sha
+    }, {
+      headers: { 'Authorization': `Bearer ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
+    });
+
+    res.json({ success: true, message: 'تم حذف المستخدم' });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
