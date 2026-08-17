@@ -1,368 +1,302 @@
 /**
- * نظام إدارة المستخدمين
- * محاكاة كاملة لـ API مع تخزين في الذاكرة
+ * نظام إدارة الحسابات - كامل مع تخزين محلي
  */
 
 // ============================================
-// 1. قاعدة البيانات (ذاكرة مؤقتة)
+// 1. قاعدة البيانات
 // ============================================
 let users = [];
+let currentUser = null;
 let idCounter = 1;
 
-// ============================================
-// 2. دوال مساعدة
-// ============================================
-function findUser(id) {
-    return users.find(u => u.id === id);
-}
-
-function findUserByEmail(email) {
-    return users.find(u => u.email === email);
-}
-
-// ============================================
-// 3. محرك معالجة الطلبات (API Simulator)
-// ============================================
-function handleRequest(method, path, query = {}, body = null) {
-    // دالة مساعدة لبناء الاستجابة
-    function res(success, data, errorMsg = null) {
-        return {
-            success,
-            data,
-            error: errorMsg,
-            path,
-            method
-        };
-    }
-
-    // ----- مسار الصفحة الرئيسية -----
-    if (path === '/' && method === 'GET') {
-        return res(true, {
-            api: "نظام تسجيل الدخول",
-            endpoints: {
-                "GET /signup": "إنشاء حساب {name, email, password}",
-                "GET /login": "تسجيل دخول {email, password}",
-                "GET /users": "عرض جميع المستخدمين",
-                "GET /user/:id": "تعديل مستخدم {name, email, password}",
-                "GET /user/:id/delete": "حذف مستخدم",
-                "POST /signup": "إنشاء حساب (JSON)",
-                "POST /login": "تسجيل دخول (JSON)",
-                "PUT /user/:id": "تعديل مستخدم (JSON)",
-                "DELETE /user/:id": "حذف مستخدم"
-            }
-        });
-    }
-
-    // ----- إنشاء حساب (GET) -----
-    if (path === '/signup' && method === 'GET') {
-        const { name, email, password } = query;
-        if (!name || !email || !password) {
-            return res(false, null, 'جميع الحقول مطلوبة');
-        }
-        if (findUserByEmail(email)) {
-            return res(false, null, 'الإيميل مستخدم مسبقاً');
-        }
-        const newUser = {
-            id: idCounter++,
-            name,
-            email,
-            password,
-            createdAt: new Date().toISOString()
-        };
-        users.push(newUser);
-        return res(true, {
-            user: { id: newUser.id, name, email }
-        });
-    }
-
-    // ----- تسجيل دخول (GET) -----
-    if (path === '/login' && method === 'GET') {
-        const { email, password } = query;
-        if (!email || !password) {
-            return res(false, null, '❌ إيميل أو كلمة مرور خاطئة');
-        }
-        const user = findUserByEmail(email);
-        if (!user || user.password !== password) {
-            return res(false, null, '❌ إيميل أو كلمة مرور خاطئة');
-        }
-        return res(true, {
-            user: { id: user.id, name: user.name, email: user.email }
-        });
-    }
-
-    // ----- عرض المستخدمين (GET) -----
-    if (path === '/users' && method === 'GET') {
-        const total = users.length;
-        const userList = users.map(u => ({
-            id: u.id,
-            name: u.name,
-            email: u.email,
-            createdAt: u.createdAt
-        }));
-        
-        let text = `👥 *قائمة المستخدمين*\n\n📌 *إجمالي:* ${total}\n\n`;
-        if (total === 0) {
-            text += '❌ لا يوجد مستخدمين مسجلين';
-        } else {
-            userList.forEach((u, i) => {
-                const date = new Date(u.createdAt).toLocaleDateString('ar-EG');
-                text += `${i+1}. *${u.name}*\n   📧 ${u.email}\n   🆔 ${u.id}\n   📅 ${date}\n\n`;
-            });
-        }
-        return res(true, { total, users: userList, text });
-    }
-
-    // ----- تعديل مستخدم (GET) -----
-    if (path.startsWith('/user/') && !path.endsWith('/delete') && method === 'GET') {
-        const id = parseInt(path.split('/')[2]);
-        if (isNaN(id)) return res(false, null, 'معرف غير صالح');
-        const user = findUser(id);
-        if (!user) return res(false, null, 'المستخدم غير موجود');
-        
-        const { name, email, password } = query;
-        if (name) user.name = name;
-        if (email) user.email = email;
-        if (password) user.password = password;
-        return res(true, { user: { ...user } });
-    }
-
-    // ----- حذف مستخدم (GET) -----
-    if (path.startsWith('/user/') && path.endsWith('/delete') && method === 'GET') {
-        const id = parseInt(path.split('/')[2]);
-        if (isNaN(id)) return res(false, null, 'معرف غير صالح');
-        const idx = users.findIndex(u => u.id === id);
-        if (idx === -1) return res(false, null, 'المستخدم غير موجود');
-        users.splice(idx, 1);
-        return res(true, { message: '✅ تم حذف المستخدم' });
-    }
-
-    // ----- إنشاء حساب (POST) -----
-    if (path === '/signup' && method === 'POST') {
-        const { name, email, password } = body || {};
-        if (!name || !email || !password) {
-            return res(false, null, 'جميع الحقول مطلوبة');
-        }
-        if (findUserByEmail(email)) {
-            return res(false, null, 'الإيميل مستخدم مسبقاً');
-        }
-        const newUser = {
-            id: idCounter++,
-            name,
-            email,
-            password,
-            createdAt: new Date().toISOString()
-        };
-        users.push(newUser);
-        return res(true, {
-            user: { id: newUser.id, name, email }
-        });
-    }
-
-    // ----- تسجيل دخول (POST) -----
-    if (path === '/login' && method === 'POST') {
-        const { email, password } = body || {};
-        if (!email || !password) {
-            return res(false, null, '❌ إيميل أو كلمة مرور خاطئة');
-        }
-        const user = findUserByEmail(email);
-        if (!user || user.password !== password) {
-            return res(false, null, '❌ إيميل أو كلمة مرور خاطئة');
-        }
-        return res(true, {
-            user: { id: user.id, name: user.name, email: user.email }
-        });
-    }
-
-    // ----- تعديل مستخدم (PUT) -----
-    if (path.startsWith('/user/') && method === 'PUT') {
-        const id = parseInt(path.split('/')[2]);
-        if (isNaN(id)) return res(false, null, 'معرف غير صالح');
-        const user = findUser(id);
-        if (!user) return res(false, null, 'المستخدم غير موجود');
-        
-        const { name, email, password } = body || {};
-        if (name) user.name = name;
-        if (email) user.email = email;
-        if (password) user.password = password;
-        return res(true, { user: { ...user } });
-    }
-
-    // ----- حذف مستخدم (DELETE) -----
-    if (path.startsWith('/user/') && method === 'DELETE') {
-        const id = parseInt(path.split('/')[2]);
-        if (isNaN(id)) return res(false, null, 'معرف غير صالح');
-        const idx = users.findIndex(u => u.id === id);
-        if (idx === -1) return res(false, null, 'المستخدم غير موجود');
-        users.splice(idx, 1);
-        return res(true, { message: '✅ تم حذف المستخدم' });
-    }
-
-    // مسار غير معروف
-    return res(false, null, '⚠️ المسار غير معروف');
-}
-
-// ============================================
-// 4. دالة اختبار وتنسيق النتائج
-// ============================================
-function testEndpoint(method, path, queryStr, bodyStr) {
-    // تحويل query string إلى object
-    const query = {};
-    if (queryStr) {
-        new URLSearchParams(queryStr).forEach((val, key) => {
-            query[key] = val;
-        });
-    }
-    
-    // تحويل body إذا وجد
-    let body = null;
-    if (bodyStr) {
-        try {
-            body = JSON.parse(bodyStr);
-        } catch (e) {
-            body = {};
-        }
-    }
-
-    const result = handleRequest(method, path, query, body);
-
-    // تجهيز النص للعرض
-    let responseText = '';
-    if (result.success) {
-        const data = result.data;
-        if (method === 'GET' && path === '/users' && data.text) {
-            responseText = data.text;
-        } else {
-            responseText = JSON.stringify(data, null, 2);
-        }
+// تحميل البيانات من localStorage
+function loadData() {
+    const saved = localStorage.getItem('usersData');
+    if (saved) {
+        const data = JSON.parse(saved);
+        users = data.users || [];
+        idCounter = data.idCounter || 1;
+        currentUser = data.currentUser || null;
     } else {
-        responseText = result.error || 'خطأ غير معروف';
-    }
-
-    return {
-        success: result.success,
-        text: responseText
-    };
-}
-
-// ============================================
-// 5. إعداد البيانات الأولية
-// ============================================
-function seedData() {
-    const existing = findUserByEmail('a@t.com');
-    if (!existing) {
+        // إضافة مستخدم افتراضي للتجربة
         users.push({
             id: idCounter++,
             name: 'أحمد',
             email: 'a@t.com',
             password: '123',
-            createdAt: new Date('2026-01-15T12:00:00.000Z').toISOString()
+            createdAt: new Date().toISOString()
         });
+        saveData();
+    }
+}
+
+// حفظ البيانات
+function saveData() {
+    localStorage.setItem('usersData', JSON.stringify({
+        users,
+        idCounter,
+        currentUser
+    }));
+}
+
+// ============================================
+// 2. دوال مساعدة
+// ============================================
+function findUserByEmail(email) {
+    return users.find(u => u.email === email);
+}
+
+function findUserById(id) {
+    return users.find(u => u.id === id);
+}
+
+function formatDate(dateString) {
+    return new Date(dateString).toLocaleDateString('ar-EG', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+// ============================================
+// 3. إدارة الصفحات
+// ============================================
+function showPage(page) {
+    // إخفاء كل الصفحات
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    
+    // إظهار الصفحة المطلوبة
+    const target = document.getElementById(`page${page.charAt(0).toUpperCase() + page.slice(1)}`);
+    if (target) target.classList.add('active');
+    
+    // تحديث الروابط
+    updateNav();
+    
+    // تحديث المحتوى
+    if (page === 'users') renderUsers();
+    if (page === 'dashboard') updateDashboard();
+}
+
+function updateNav() {
+    const navUsers = document.getElementById('navUsers');
+    const navLogout = document.getElementById('navLogout');
+    const userNameDisplay = document.getElementById('userNameDisplay');
+    
+    if (currentUser) {
+        navUsers.style.display = 'inline-block';
+        navLogout.style.display = 'inline-block';
+        userNameDisplay.textContent = `👋 ${currentUser.name}`;
+        document.getElementById('statusText').textContent = `✅ مرحباً ${currentUser.name}`;
+        document.getElementById('statusText').className = 'status-text logged-in';
+    } else {
+        navUsers.style.display = 'inline-block';
+        navLogout.style.display = 'none';
+        userNameDisplay.textContent = '❌ غير مسجل';
+        document.getElementById('statusText').textContent = '❌ غير مسجل دخول';
+        document.getElementById('statusText').className = 'status-text logged-out';
+    }
+    
+    // تحديث عدد المستخدمين
+    document.getElementById('usersCount').textContent = users.length;
+}
+
+// ============================================
+// 4. عمليات الحسابات
+// ============================================
+
+// إنشاء حساب
+function handleSignup(e) {
+    e.preventDefault();
+    
+    const name = document.getElementById('signupName').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
+    const password = document.getElementById('signupPassword').value;
+    const messageEl = document.getElementById('signupMessage');
+    
+    if (!name || !email || !password) {
+        showMessage(messageEl, 'جميع الحقول مطلوبة', 'error');
+        return;
+    }
+    
+    if (findUserByEmail(email)) {
+        showMessage(messageEl, '❌ هذا البريد مستخدم مسبقاً', 'error');
+        return;
+    }
+    
+    const newUser = {
+        id: idCounter++,
+        name,
+        email,
+        password,
+        createdAt: new Date().toISOString()
+    };
+    
+    users.push(newUser);
+    saveData();
+    
+    showMessage(messageEl, `✅ تم إنشاء الحساب بنجاح! مرحباً ${name}`, 'success');
+    document.getElementById('signupForm').reset();
+    updateNav();
+    renderUsers();
+}
+
+// تسجيل دخول
+function handleLogin(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const messageEl = document.getElementById('loginMessage');
+    
+    if (!email || !password) {
+        showMessage(messageEl, '❌ البريد وكلمة المرور مطلوبة', 'error');
+        return;
+    }
+    
+    const user = findUserByEmail(email);
+    if (!user || user.password !== password) {
+        showMessage(messageEl, '❌ بريد أو كلمة مرور خاطئة', 'error');
+        return;
+    }
+    
+    currentUser = user;
+    saveData();
+    
+    showMessage(messageEl, `✅ مرحباً ${user.name}، تم تسجيل الدخول بنجاح`, 'success');
+    document.getElementById('loginForm').reset();
+    updateNav();
+    showPage('dashboard');
+}
+
+// تسجيل خروج
+function logout() {
+    if (!confirm('هل أنت متأكد من تسجيل الخروج؟')) return;
+    
+    currentUser = null;
+    saveData();
+    updateNav();
+    showPage('home');
+    
+    // تنظيف الرسائل
+    document.querySelectorAll('.message').forEach(el => {
+        el.style.display = 'none';
+        el.className = 'message';
+    });
+}
+
+// حذف الحساب
+function handleDeleteAccount() {
+    if (!currentUser) {
+        alert('يجب تسجيل الدخول أولاً');
+        return;
+    }
+    
+    if (!confirm(`هل أنت متأكد من حذف حساب "${currentUser.name}" نهائياً؟`)) return;
+    
+    const index = users.findIndex(u => u.id === currentUser.id);
+    if (index !== -1) {
+        users.splice(index, 1);
+        currentUser = null;
+        saveData();
+        updateNav();
+        showPage('home');
+        alert('✅ تم حذف الحساب بنجاح');
+    }
+}
+
+// عرض رسالة
+function showMessage(el, text, type) {
+    el.textContent = text;
+    el.className = `message ${type}`;
+    el.style.display = 'block';
+}
+
+// ============================================
+// 5. عرض المستخدمين
+// ============================================
+function renderUsers() {
+    const container = document.getElementById('usersList');
+    
+    if (users.length === 0) {
+        container.innerHTML = '<div class="empty-state">📭 لا يوجد مستخدمين مسجلين</div>';
+        return;
+    }
+    
+    container.innerHTML = users.map(user => `
+        <div class="user-item">
+            <div class="user-info">
+                <span class="user-name">👤 ${user.name}</span>
+                <span class="user-email">📧 ${user.email}</span>
+                <span class="user-id">🆔 #${user.id}</span>
+                <span class="user-date">📅 ${formatDate(user.createdAt)}</span>
+            </div>
+            ${currentUser && currentUser.id === user.id ? `
+                <div class="user-actions">
+                    <span style="background:#f0fff4;color:#38a169;padding:4px 12px;border-radius:30px;font-size:12px;">أنت</span>
+                </div>
+            ` : `
+                <div class="user-actions">
+                    <button class="btn-sm danger" onclick="deleteUser(${user.id})">🗑️</button>
+                </div>
+            `}
+        </div>
+    `).join('');
+    
+    document.getElementById('usersCount').textContent = users.length;
+}
+
+// حذف مستخدم من قبل المسؤول (حذف أي مستخدم)
+function deleteUser(id) {
+    if (!currentUser) {
+        alert('يجب تسجيل الدخول أولاً');
+        return;
+    }
+    
+    const user = findUserById(id);
+    if (!user) return;
+    
+    if (!confirm(`هل أنت متأكد من حذف المستخدم "${user.name}"؟`)) return;
+    
+    const index = users.findIndex(u => u.id === id);
+    if (index !== -1) {
+        users.splice(index, 1);
+        // إذا كان المحذوف هو المستخدم الحالي
+        if (currentUser && currentUser.id === id) {
+            currentUser = null;
+        }
+        saveData();
+        renderUsers();
+        updateNav();
+        alert('✅ تم حذف المستخدم');
     }
 }
 
 // ============================================
-// 6. بناء واجهة المستخدم
+// 6. لوحة التحكم
 // ============================================
-const endpoints = [
-    { method: 'GET', path: '/signup', desc: 'إنشاء حساب', query: 'name=أحمد&email=a@t.com&password=123' },
-    { method: 'GET', path: '/login', desc: 'تسجيل دخول', query: 'email=a@t.com&password=123' },
-    { method: 'GET', path: '/users', desc: 'عرض المستخدمين', query: '' },
-    { method: 'GET', path: '/user/123', desc: 'تعديل مستخدم', query: 'name=جديد&email=new@t.com' },
-    { method: 'GET', path: '/user/123/delete', desc: 'حذف مستخدم', query: '' },
-    { method: 'POST', path: '/signup', desc: 'إنشاء حساب (JSON)', body: '{"name":"أحمد","email":"a@t.com","password":"123"}' },
-    { method: 'POST', path: '/login', desc: 'تسجيل دخول (JSON)', body: '{"email":"a@t.com","password":"123"}' },
-    { method: 'PUT', path: '/user/123', desc: 'تعديل مستخدم (JSON)', body: '{"name":"جديد","email":"new@t.com","password":"123"}' },
-    { method: 'DELETE', path: '/user/123', desc: 'حذف مستخدم (JSON)', body: '' },
-    { method: 'GET', path: '/', desc: 'الصفحة الرئيسية', query: '' },
-];
-
-function buildUI() {
-    const container = document.getElementById('endpointsContainer');
-    if (!container) return;
-
-    endpoints.forEach(ep => {
-        const card = document.createElement('div');
-        card.className = 'card';
-
-        const methodClass = ep.method.toLowerCase();
-        const queryDisplay = ep.query ? `?${ep.query}` : '';
-        const bodyDisplay = ep.body ? `📦 ${ep.body}` : '';
-
-        // تنفيذ الطلب للحصول على استجابة نموذجية
-        const result = testEndpoint(ep.method, ep.path, ep.query, ep.body);
-
-        // تنسيق الاستجابة
-        let responseHtml = result.text;
-        if (result.success) {
-            responseHtml = `<span class="success">✅ نجاح</span>\n` + responseHtml;
-        } else {
-            responseHtml = `<span class="error">❌ فشل</span>\n` + responseHtml;
-        }
-
-        card.innerHTML = `
-            <h3>
-                <span>${ep.desc}</span>
-                <span class="method ${methodClass}">${ep.method}</span>
-            </h3>
-            <div class="url">${ep.path}${queryDisplay}</div>
-            ${bodyDisplay ? `<div class="body-data">${bodyDisplay}</div>` : ''}
-            <div class="response">${responseHtml}</div>
-            <div class="flex mt-2">
-                <button class="btn-test" data-method="${ep.method}" data-path="${ep.path}" data-query="${ep.query || ''}" data-body="${ep.body || ''}">🔄 اختبار</button>
-                <span class="badge">${ep.method === 'GET' ? '🔗 رابط' : '📨 بيانات'}</span>
-            </div>
-        `;
-        container.appendChild(card);
-    });
+function updateDashboard() {
+    if (!currentUser) {
+        showPage('home');
+        return;
+    }
+    
+    document.getElementById('dashName').textContent = currentUser.name;
+    document.getElementById('dashEmail').textContent = currentUser.email;
+    document.getElementById('dashId').textContent = `#${currentUser.id}`;
+    document.getElementById('dashDate').textContent = formatDate(currentUser.createdAt);
 }
 
 // ============================================
-// 7. أحداث الأزرار (اختبار)
-// ============================================
-function setupEventListeners() {
-    document.addEventListener('click', function(e) {
-        const btn = e.target.closest('.btn-test');
-        if (!btn) return;
-
-        const card = btn.closest('.card');
-        if (!card) return;
-
-        const responseDiv = card.querySelector('.response');
-        if (!responseDiv) return;
-
-        const method = btn.dataset.method;
-        const path = btn.dataset.path;
-        const queryStr = btn.dataset.query;
-        const bodyStr = btn.dataset.body;
-
-        // إعادة تنفيذ الطلب
-        const result = testEndpoint(method, path, queryStr, bodyStr);
-        let responseHtml = result.text;
-        if (result.success) {
-            responseHtml = `<span class="success">✅ نجاح</span>\n` + responseHtml;
-        } else {
-            responseHtml = `<span class="error">❌ فشل</span>\n` + responseHtml;
-        }
-        responseDiv.innerHTML = responseHtml;
-
-        // تأثير بصري مؤقت
-        card.style.borderColor = '#4299e1';
-        card.style.boxShadow = '0 4px 20px rgba(66, 153, 225, 0.3)';
-        setTimeout(() => {
-            card.style.borderColor = '#e2e8f0';
-            card.style.boxShadow = 'none';
-        }, 600);
-    });
-}
-
-// ============================================
-// 8. تهيئة التطبيق
+// 7. تهيئة التطبيق
 // ============================================
 function init() {
-    seedData();
-    buildUI();
-    setupEventListeners();
+    loadData();
+    updateNav();
+    renderUsers();
+    showPage('home');
 }
 
-// تشغيل التطبيق عند تحميل الصفحة
+// تشغيل عند تحميل الصفحة
 document.addEventListener('DOMContentLoaded', init);
