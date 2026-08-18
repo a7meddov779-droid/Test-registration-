@@ -163,4 +163,261 @@ async function handleSignup(e) {
         }, 1500);
         
     } catch (error) {
-        showMessage(messageEl, '❌ حدث خطأ، حاول مرة أخرى', 'error
+        showMessage(messageEl, '❌ حدث خطأ، حاول مرة أخرى', 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-user-plus"></i> إنشاء حساب';
+    }
+}
+
+// تسجيل دخول
+async function handleLogin(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const messageEl = document.getElementById('loginMessage');
+    const btn = e.target.querySelector('.btn-login');
+    const rememberMe = document.getElementById('rememberMe').checked;
+    
+    if (!email || !password) {
+        showMessage(messageEl, '⚠️ البريد وكلمة المرور مطلوبة', 'error');
+        return;
+    }
+    
+    // تعطيل الزر
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري تسجيل الدخول...';
+    
+    try {
+        // محاكاة تأخير الشبكة
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        const user = findUserByEmail(email);
+        
+        if (!user || user.password !== password) {
+            showMessage(messageEl, '❌ بريد أو كلمة مرور خاطئة', 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> تسجيل دخول';
+            
+            // هز الحقل
+            document.querySelector('.input-wrapper').style.animation = 'shake 0.5s ease';
+            setTimeout(() => {
+                document.querySelector('.input-wrapper').style.animation = '';
+            }, 500);
+            return;
+        }
+        
+        currentUser = user;
+        if (rememberMe) {
+            saveData();
+        } else {
+            // حفظ مؤقت فقط
+            localStorage.setItem('usersData', JSON.stringify({ users, idCounter, currentUser }));
+        }
+        
+        showMessage(messageEl, `✅ مرحباً ${user.name}، تم تسجيل الدخول بنجاح 🎉`, 'success');
+        document.getElementById('loginForm').reset();
+        
+        // إعادة تعيين الزر
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> تسجيل دخول';
+        
+        // الانتقال للوحة التحكم
+        setTimeout(() => {
+            showPage('dashboard');
+        }, 1000);
+        
+    } catch (error) {
+        showMessage(messageEl, '❌ حدث خطأ، حاول مرة أخرى', 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> تسجيل دخول';
+    }
+}
+
+// تسجيل خروج
+function logout() {
+    if (!confirm('هل أنت متأكد من تسجيل الخروج؟')) return;
+    
+    currentUser = null;
+    saveData();
+    showPage('login');
+    
+    // تنظيف الرسائل
+    document.querySelectorAll('.message').forEach(el => {
+        el.style.display = 'none';
+        el.className = 'message';
+    });
+    
+    showMessage(document.getElementById('loginMessage'), '👋 تم تسجيل الخروج بنجاح', 'success');
+}
+
+// حذف الحساب
+function handleDeleteAccount() {
+    if (!currentUser) {
+        alert('⚠️ يجب تسجيل الدخول أولاً');
+        return;
+    }
+    
+    if (!confirm(`⚠️ هل أنت متأكد من حذف حساب "${currentUser.name}" نهائياً؟\nهذا الإجراء لا يمكن التراجع عنه!`)) return;
+    
+    const index = users.findIndex(u => u.id === currentUser.id);
+    if (index !== -1) {
+        users.splice(index, 1);
+        const deletedName = currentUser.name;
+        currentUser = null;
+        saveData();
+        showPage('login');
+        showMessage(document.getElementById('loginMessage'), `🗑️ تم حذف حساب "${deletedName}" بنجاح`, 'success');
+    }
+}
+
+// نسيت كلمة المرور
+function handleForgotPassword() {
+    const email = document.getElementById('forgotEmail').value.trim();
+    const btn = event.target;
+    
+    if (!email) {
+        alert('⚠️ الرجاء إدخال البريد الإلكتروني');
+        return;
+    }
+    
+    const user = findUserByEmail(email);
+    if (!user) {
+        alert('❌ هذا البريد غير مسجل');
+        return;
+    }
+    
+    // تأثير الزر
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
+    btn.disabled = true;
+    
+    setTimeout(() => {
+        alert(`✅ تم إرسال رابط إعادة تعيين كلمة المرور إلى ${email}`);
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال الرابط';
+        btn.disabled = false;
+        showPage('login');
+    }, 1000);
+}
+
+// ============================================
+// 4. عرض البيانات
+// ============================================
+
+// عرض لوحة التحكم
+function updateDashboard() {
+    if (!currentUser) {
+        showPage('login');
+        return;
+    }
+    
+    document.getElementById('dashName').textContent = currentUser.name;
+    document.getElementById('dashEmail').textContent = currentUser.email;
+    document.getElementById('dashId').textContent = `#${currentUser.id}`;
+    document.getElementById('dashDate').textContent = formatDate(currentUser.createdAt);
+}
+
+// عرض المستخدمين مع أنيميشن
+function renderUsers() {
+    const container = document.getElementById('usersList');
+    const countEl = document.getElementById('usersCount');
+    
+    countEl.textContent = users.length;
+    
+    if (users.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center; color:#a0aec0; padding:30px;">
+                <i class="fas fa-users" style="font-size:40px; display:block; margin-bottom:10px;"></i>
+                📭 لا يوجد مستخدمين
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = users.map((user, index) => {
+        const isCurrent = currentUser && currentUser.id === user.id;
+        return `
+            <div class="user-item" style="animation-delay: ${index * 0.05}s">
+                <div class="name">
+                    <i class="fas fa-user-circle"></i> ${user.name}
+                    ${isCurrent ? '<span class="badge"><i class="fas fa-check-circle"></i> أنت</span>' : ''}
+                </div>
+                <div class="email"><i class="fas fa-envelope"></i> ${user.email}</div>
+                <div class="meta">
+                    <i class="fas fa-id-badge"></i> #${user.id} 
+                    <i class="fas fa-calendar-alt" style="margin-right:10px;"></i> ${formatDate(user.createdAt)}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// ============================================
+// 5. إظهار الرسائل
+// ============================================
+function showMessage(el, text, type) {
+    if (!el) return;
+    el.textContent = text;
+    el.className = `message ${type}`;
+    el.style.display = 'block';
+    
+    // إخفاء تلقائي بعد 5 ثواني (للنجاح فقط)
+    if (type === 'success') {
+        setTimeout(() => {
+            if (el) {
+                el.style.display = 'none';
+            }
+        }, 5000);
+    }
+}
+
+// ============================================
+// 6. إضافة أنيميشن shake
+// ============================================
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+        20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+`;
+document.head.appendChild(style);
+
+// ============================================
+// 7. إظهار/إخفاء كلمة المرور
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    const toggleBtn = document.getElementById('toggleBtn');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', function() {
+            const pwInput = document.getElementById('loginPassword');
+            const icon = this.querySelector('i');
+            if (pwInput.type === 'password') {
+                pwInput.type = 'text';
+                icon.className = 'fas fa-eye-slash';
+                this.classList.add('active');
+            } else {
+                pwInput.type = 'password';
+                icon.className = 'fas fa-eye';
+                this.classList.remove('active');
+            }
+        });
+    }
+});
+
+// ============================================
+// 8. تهيئة التطبيق
+// ============================================
+function init() {
+    loadData();
+    
+    // إذا كان هناك مستخدم مسجل، افتح لوحة التحكم
+    if (currentUser) {
+        showPage('dashboard');
+    } else {
+        showPage('login');
+    }
+}
+
+// تشغيل عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', init);
