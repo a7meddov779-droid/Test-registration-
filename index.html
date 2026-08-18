@@ -1,95 +1,216 @@
 <!DOCTYPE html>
-<html dir="rtl" lang="ar">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>نظام إدارة الحسابات</title>
+    <title>نظام الحسابات المتكامل</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <div class="container">
-        <!-- شريط التنقل -->
-        <nav class="navbar" id="navbar">
-            <div class="nav-brand">👤 نظام الحسابات</div>
-            <div class="nav-links" id="navLinks">
-                <a href="#" onclick="showPage('home')">🏠 الرئيسية</a>
-                <a href="#" onclick="showPage('users')" id="navUsers">👥 المستخدمين</a>
-                <a href="#" onclick="logout()" id="navLogout">🚪 خروج</a>
-            </div>
-            <div class="nav-user" id="navUser">
-                <span id="userNameDisplay"></span>
-            </div>
-        </nav>
 
-        <!-- الصفحات -->
-        <div id="pageHome" class="page active">
-            <div class="welcome-box">
-                <h2>✨ مرحباً بك في نظام الحسابات</h2>
-                <p>قم بإنشاء حساب جديد أو سجل الدخول للبدء</p>
+    <!-- ===== الشريط العلوي ===== -->
+    <header class="topbar">
+        <div class="bar-container">
+            <div class="spacer"></div>
+            <a href="#" class="brand" onclick="showPage('home')">
+                <span class="brand-name">نظام الحسابات</span>
+                <span class="brand-logo">
+                    <i class="fas fa-users"></i>
+                </span>
+            </a>
+        </div>
+    </header>
+
+    <!-- ===== صفحة تسجيل الدخول ===== -->
+    <div id="pageLogin" class="page active">
+        <div class="login-card" data-aos="fade-up">
+            <div class="main-logo">
+                <i class="fas fa-user-lock"></i>
             </div>
 
-            <div class="auth-grid">
-                <!-- نموذج إنشاء حساب -->
-                <div class="auth-card">
-                    <h3>📝 إنشاء حساب جديد</h3>
-                    <form id="signupForm" onsubmit="handleSignup(event)">
-                        <input type="text" id="signupName" placeholder="الاسم" required />
-                        <input type="email" id="signupEmail" placeholder="البريد الإلكتروني" required />
-                        <input type="password" id="signupPassword" placeholder="كلمة المرور" required />
-                        <button type="submit">إنشاء حساب</button>
-                    </form>
-                    <div id="signupMessage" class="message"></div>
+            <h1 class="login-title">مرحبًا بك</h1>
+            <p class="login-sub">سجّل الدخول لمواصلة رحلتك</p>
+
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>البريد الإلكتروني</label>
+                    <div class="input-wrapper">
+                        <input type="email" id="loginEmail" placeholder="example@email.com" required />
+                        <span class="icon-right">
+                            <i class="fas fa-envelope"></i>
+                        </span>
+                    </div>
                 </div>
 
-                <!-- نموذج تسجيل دخول -->
-                <div class="auth-card">
-                    <h3>🔑 تسجيل الدخول</h3>
-                    <form id="loginForm" onsubmit="handleLogin(event)">
-                        <input type="email" id="loginEmail" placeholder="البريد الإلكتروني" required />
-                        <input type="password" id="loginPassword" placeholder="كلمة المرور" required />
-                        <button type="submit">تسجيل دخول</button>
-                    </form>
-                    <div id="loginMessage" class="message"></div>
+                <div class="form-group">
+                    <label>كلمة المرور</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="loginPassword" placeholder="••••••••" required />
+                        <button type="button" class="toggle-pw" id="toggleBtn">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <span class="icon-right">
+                            <i class="fas fa-lock"></i>
+                        </span>
+                    </div>
                 </div>
-            </div>
 
-            <!-- حالة المستخدم -->
-            <div id="userStatus" class="user-status">
-                <div class="status-card">
-                    <span class="status-label">📊 حالة الحساب:</span>
-                    <span id="statusText" class="status-text">❌ غير مسجل دخول</span>
+                <div class="actions-row">
+                    <label>
+                        <input type="checkbox" class="custom-checkbox" id="rememberMe" /> 
+                        البقاء مسجلاً
+                    </label>
+                    <a href="#" onclick="showPage('forgot')">نسيت كلمة المرور؟</a>
                 </div>
+
+                <button type="submit" class="btn-login">
+                    <i class="fas fa-sign-in-alt"></i> تسجيل دخول
+                </button>
+            </form>
+
+            <div id="loginMessage" class="message" style="display:none;"></div>
+
+            <div class="divider">أو</div>
+
+            <div class="create-account">
+                ليس لديك حساب؟ <a href="#" onclick="showPage('signup')">أنشئ حسابًا</a>
             </div>
         </div>
+    </div>
 
-        <!-- صفحة المستخدمين -->
-        <div id="pageUsers" class="page">
-            <div class="users-header">
-                <h2>👥 قائمة المستخدمين</h2>
-                <span id="usersCount" class="count-badge">0</span>
+    <!-- ===== صفحة إنشاء حساب ===== -->
+    <div id="pageSignup" class="page">
+        <div class="login-card" data-aos="fade-up">
+            <div class="main-logo" style="background: #ebf8ff;">
+                <i class="fas fa-user-plus" style="color: #4299e1;"></i>
             </div>
-            <div id="usersList" class="users-list">
-                <div class="empty-state">📭 لا يوجد مستخدمين مسجلين</div>
-            </div>
-        </div>
 
-        <!-- صفحة لوحة التحكم (بعد تسجيل الدخول) -->
-        <div id="pageDashboard" class="page">
-            <div class="dashboard-card">
-                <h2>🎯 لوحة التحكم</h2>
-                <div id="dashboardInfo" class="dashboard-info">
-                    <p>👤 <strong>الاسم:</strong> <span id="dashName"></span></p>
-                    <p>📧 <strong>البريد:</strong> <span id="dashEmail"></span></p>
-                    <p>🆔 <strong>المعرف:</strong> <span id="dashId"></span></p>
-                    <p>📅 <strong>تاريخ التسجيل:</strong> <span id="dashDate"></span></p>
+            <h1 class="login-title">إنشاء حساب</h1>
+            <p class="login-sub">انضم إلينا الآن مجاناً</p>
+
+            <form id="signupForm" onsubmit="handleSignup(event)">
+                <div class="form-group">
+                    <label>الاسم</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="signupName" placeholder="أحمد محمد" required />
+                        <span class="icon-right">
+                            <i class="fas fa-user"></i>
+                        </span>
+                    </div>
                 </div>
-                <button class="btn-danger" onclick="handleDeleteAccount()">🗑️ حذف الحساب</button>
+
+                <div class="form-group">
+                    <label>البريد الإلكتروني</label>
+                    <div class="input-wrapper">
+                        <input type="email" id="signupEmail" placeholder="example@email.com" required />
+                        <span class="icon-right">
+                            <i class="fas fa-envelope"></i>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>كلمة المرور</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="signupPassword" placeholder="••••••••" required />
+                        <span class="icon-right">
+                            <i class="fas fa-lock"></i>
+                        </span>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-login" style="background: #4299e1;">
+                    <i class="fas fa-user-plus"></i> إنشاء حساب
+                </button>
+            </form>
+
+            <div id="signupMessage" class="message" style="display:none;"></div>
+
+            <div class="create-account" style="margin-top:20px;">
+                لديك حساب بالفعل؟ <a href="#" onclick="showPage('login')">تسجيل دخول</a>
             </div>
         </div>
+    </div>
 
-        <footer class="footer">
-            ⚡ نظام إدارة الحسابات — جميع الحقوق محفوظة © 2026
-        </footer>
+    <!-- ===== صفحة لوحة التحكم ===== -->
+    <div id="pageDashboard" class="page">
+        <div class="login-card" style="max-width:450px;" data-aos="fade-up">
+            <div class="main-logo" style="background: #f0fff4;">
+                <i class="fas fa-user-check" style="color: #38a169;"></i>
+            </div>
+
+            <h1 class="login-title">مرحباً <span id="dashName"></span>!</h1>
+            <p class="login-sub">أنت مسجل الدخول الآن</p>
+
+            <div class="dashboard-info">
+                <p><i class="fas fa-envelope"></i> <strong>البريد:</strong> <span id="dashEmail"></span></p>
+                <p><i class="fas fa-id-badge"></i> <strong>المعرف:</strong> <span id="dashId"></span></p>
+                <p><i class="fas fa-calendar-alt"></i> <strong>تاريخ التسجيل:</strong> <span id="dashDate"></span></p>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button class="btn-login" onclick="showPage('users')" style="flex:1; background: #4299e1;">
+                    <i class="fas fa-users"></i> المستخدمين
+                </button>
+                <button class="btn-login" onclick="logout()" style="flex:1; background: #e53e3e;">
+                    <i class="fas fa-sign-out-alt"></i> خروج
+                </button>
+            </div>
+            
+            <button class="btn-login" onclick="handleDeleteAccount()" style="margin-top:10px; background: #fc8181; color: #742a2a;">
+                <i class="fas fa-trash-alt"></i> حذف الحساب
+            </button>
+        </div>
+    </div>
+
+    <!-- ===== صفحة المستخدمين ===== -->
+    <div id="pageUsers" class="page">
+        <div class="login-card" style="max-width:500px;" data-aos="fade-up">
+            <h1 class="login-title"><i class="fas fa-users"></i> المستخدمين</h1>
+            <p class="login-sub">إجمالي: <span id="usersCount">0</span></p>
+            
+            <div id="usersList" style="margin-top:20px; max-height:400px; overflow-y:auto;">
+                <div style="text-align:center; color:#a0aec0; padding:30px;">
+                    <i class="fas fa-spinner fa-spin"></i> جاري التحميل...
+                </div>
+            </div>
+
+            <button class="btn-login" onclick="showPage('dashboard')" style="margin-top:15px; background: #718096;">
+                <i class="fas fa-arrow-right"></i> العودة للوحة
+            </button>
+        </div>
+    </div>
+
+    <!-- ===== صفحة نسيت كلمة المرور ===== -->
+    <div id="pageForgot" class="page">
+        <div class="login-card" data-aos="fade-up">
+            <div class="main-logo" style="background: #fefcbf;">
+                <i class="fas fa-key" style="color: #d69e2e;"></i>
+            </div>
+
+            <h1 class="login-title">نسيت كلمة المرور</h1>
+            <p class="login-sub">أدخل بريدك وسنرسل لك رابط إعادة تعيين</p>
+
+            <div class="form-group">
+                <label>البريد الإلكتروني</label>
+                <div class="input-wrapper">
+                    <input type="email" id="forgotEmail" placeholder="example@email.com" />
+                    <span class="icon-right">
+                        <i class="fas fa-envelope"></i>
+                    </span>
+                </div>
+            </div>
+
+            <button class="btn-login" onclick="handleForgotPassword()" style="background: #d69e2e;">
+                <i class="fas fa-paper-plane"></i> إرسال الرابط
+            </button>
+            
+            <div class="create-account" style="margin-top:20px;">
+                <a href="#" onclick="showPage('login')"><i class="fas fa-arrow-left"></i> العودة لتسجيل الدخول</a>
+            </div>
+        </div>
     </div>
 
     <script src="app.js"></script>
