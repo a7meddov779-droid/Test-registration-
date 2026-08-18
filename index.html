@@ -72,7 +72,17 @@
 
             <div id="loginMessage" class="message" style="display:none;"></div>
 
-            <div class="divider">أو</div>
+            <!-- ===== أزرار التواصل الاجتماعي ===== -->
+            <div class="divider">المتابعة باستخدام</div>
+
+            <div class="social-login">
+                <button class="social-btn" onclick="handleSocialLogin('google')">
+                    <i class="fab fa-google" style="color:#4285F4;"></i> Google
+                </button>
+                <button class="social-btn" onclick="handleSocialLogin('github')">
+                    <i class="fab fa-github"></i> GitHub
+                </button>
+            </div>
 
             <div class="create-account">
                 ليس لديك حساب؟ <a href="#" onclick="showPage('signup')">أنشئ حسابًا</a>
