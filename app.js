@@ -1,5 +1,5 @@
 /**
- * نظام الحسابات المتكامل - مع API محلي وأنيميشن
+ * نظام الحسابات المتكامل - مع API محلي وأنيميشن وأزرار Google/GitHub
  */
 
 // ============================================
@@ -300,7 +300,66 @@ function handleForgotPassword() {
 }
 
 // ============================================
-// 4. عرض البيانات
+// 4. تسجيل الدخول عبر وسائل التواصل الاجتماعي
+// ============================================
+function handleSocialLogin(provider) {
+    // تعطيل الأزرار مؤقتاً
+    const btns = document.querySelectorAll('.social-btn');
+    btns.forEach(btn => {
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+    });
+    
+    // محاكاة تسجيل الدخول
+    setTimeout(() => {
+        // البحث عن مستخدم وهمي أو إنشاء واحد
+        let socialUser = findUserByEmail(`${provider}@example.com`);
+        
+        if (!socialUser) {
+            // إنشاء مستخدم جديد من مزود الخدمة
+            const newUser = {
+                id: idCounter++,
+                name: `مستخدم ${provider === 'google' ? 'جوجل' : 'جيت هب'}`,
+                email: `${provider}@example.com`,
+                password: `${provider}123`,
+                createdAt: new Date().toISOString(),
+                provider: provider
+            };
+            users.push(newUser);
+            currentUser = newUser;
+            saveData();
+            
+            showMessage(
+                document.getElementById('loginMessage'),
+                `✅ تم تسجيل الدخول عبر ${provider === 'google' ? 'جوجل' : 'جيت هب'} بنجاح! 🎉`,
+                'success'
+            );
+        } else {
+            currentUser = socialUser;
+            saveData();
+            showMessage(
+                document.getElementById('loginMessage'),
+                `✅ مرحباً ${socialUser.name}، تم تسجيل الدخول عبر ${provider === 'google' ? 'جوجل' : 'جيت هب'}`,
+                'success'
+            );
+        }
+        
+        // إعادة تفعيل الأزرار
+        btns.forEach(btn => {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+        });
+        
+        // الانتقال للوحة
+        setTimeout(() => {
+            showPage('dashboard');
+        }, 1000);
+        
+    }, 800);
+}
+
+// ============================================
+// 5. عرض البيانات
 // ============================================
 
 // عرض لوحة التحكم
@@ -335,11 +394,18 @@ function renderUsers() {
     
     container.innerHTML = users.map((user, index) => {
         const isCurrent = currentUser && currentUser.id === user.id;
+        const providerIcon = user.provider === 'google' ? 
+            '<i class="fab fa-google" style="color:#4285F4;"></i>' : 
+            user.provider === 'github' ? 
+            '<i class="fab fa-github"></i>' : 
+            '<i class="fas fa-user-circle"></i>';
+        
         return `
             <div class="user-item" style="animation-delay: ${index * 0.05}s">
                 <div class="name">
-                    <i class="fas fa-user-circle"></i> ${user.name}
+                    ${providerIcon} ${user.name}
                     ${isCurrent ? '<span class="badge"><i class="fas fa-check-circle"></i> أنت</span>' : ''}
+                    ${user.provider ? `<span class="badge" style="background:#ebf8ff;color:#4299e1;">${user.provider === 'google' ? 'جوجل' : 'جيت هب'}</span>` : ''}
                 </div>
                 <div class="email"><i class="fas fa-envelope"></i> ${user.email}</div>
                 <div class="meta">
@@ -352,7 +418,7 @@ function renderUsers() {
 }
 
 // ============================================
-// 5. إظهار الرسائل
+// 6. إظهار الرسائل
 // ============================================
 function showMessage(el, text, type) {
     if (!el) return;
@@ -371,7 +437,7 @@ function showMessage(el, text, type) {
 }
 
 // ============================================
-// 6. إضافة أنيميشن shake
+// 7. إضافة أنيميشن shake
 // ============================================
 const style = document.createElement('style');
 style.textContent = `
@@ -384,7 +450,7 @@ style.textContent = `
 document.head.appendChild(style);
 
 // ============================================
-// 7. إظهار/إخفاء كلمة المرور
+// 8. إظهار/إخفاء كلمة المرور
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
     const toggleBtn = document.getElementById('toggleBtn');
@@ -406,7 +472,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ============================================
-// 8. تهيئة التطبيق
+// 9. تهيئة التطبيق
 // ============================================
 function init() {
     loadData();
