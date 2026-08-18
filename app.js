@@ -1,33 +1,42 @@
 /**
- * نظام إدارة الحسابات - كامل مع تخزين محلي
+ * نظام الحسابات المتكامل - مع API محلي وأنيميشن
  */
 
 // ============================================
-// 1. قاعدة البيانات
+// 1. قاعدة البيانات (localStorage)
 // ============================================
 let users = [];
 let currentUser = null;
 let idCounter = 1;
 
-// تحميل البيانات من localStorage
+// تحميل البيانات
 function loadData() {
     const saved = localStorage.getItem('usersData');
     if (saved) {
-        const data = JSON.parse(saved);
-        users = data.users || [];
-        idCounter = data.idCounter || 1;
-        currentUser = data.currentUser || null;
+        try {
+            const data = JSON.parse(saved);
+            users = data.users || [];
+            idCounter = data.idCounter || 1;
+            currentUser = data.currentUser || null;
+        } catch (e) {
+            resetData();
+        }
     } else {
-        // إضافة مستخدم افتراضي للتجربة
-        users.push({
-            id: idCounter++,
-            name: 'أحمد',
-            email: 'a@t.com',
-            password: '123',
-            createdAt: new Date().toISOString()
-        });
-        saveData();
+        resetData();
     }
+}
+
+// إعادة تعيين البيانات مع مستخدم افتراضي
+function resetData() {
+    users = [{
+        id: idCounter++,
+        name: 'أحمد',
+        email: 'a@t.com',
+        password: '123',
+        createdAt: new Date().toISOString()
+    }];
+    currentUser = null;
+    saveData();
 }
 
 // حفظ البيانات
@@ -39,9 +48,7 @@ function saveData() {
     }));
 }
 
-// ============================================
-// 2. دوال مساعدة
-// ============================================
+// دوال مساعدة
 function findUserByEmail(email) {
     return users.find(u => u.email === email);
 }
@@ -61,242 +68,99 @@ function formatDate(dateString) {
 }
 
 // ============================================
-// 3. إدارة الصفحات
+// 2. إدارة الصفحات مع أنيميشن
 // ============================================
 function showPage(page) {
-    // إخفاء كل الصفحات
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const pages = document.querySelectorAll('.page');
+    pages.forEach(p => {
+        p.classList.remove('active');
+        p.style.animation = 'none';
+        p.offsetHeight; // إعادة تشغيل الأنيميشن
+    });
     
-    // إظهار الصفحة المطلوبة
     const target = document.getElementById(`page${page.charAt(0).toUpperCase() + page.slice(1)}`);
-    if (target) target.classList.add('active');
-    
-    // تحديث الروابط
-    updateNav();
-    
-    // تحديث المحتوى
-    if (page === 'users') renderUsers();
-    if (page === 'dashboard') updateDashboard();
-}
-
-function updateNav() {
-    const navUsers = document.getElementById('navUsers');
-    const navLogout = document.getElementById('navLogout');
-    const userNameDisplay = document.getElementById('userNameDisplay');
-    
-    if (currentUser) {
-        navUsers.style.display = 'inline-block';
-        navLogout.style.display = 'inline-block';
-        userNameDisplay.textContent = `👋 ${currentUser.name}`;
-        document.getElementById('statusText').textContent = `✅ مرحباً ${currentUser.name}`;
-        document.getElementById('statusText').className = 'status-text logged-in';
-    } else {
-        navUsers.style.display = 'inline-block';
-        navLogout.style.display = 'none';
-        userNameDisplay.textContent = '❌ غير مسجل';
-        document.getElementById('statusText').textContent = '❌ غير مسجل دخول';
-        document.getElementById('statusText').className = 'status-text logged-out';
+    if (target) {
+        target.classList.add('active');
+        target.style.animation = 'fadeSlideIn 0.5s ease forwards';
     }
     
-    // تحديث عدد المستخدمين
-    document.getElementById('usersCount').textContent = users.length;
+    // تحديث المحتوى حسب الصفحة
+    if (page === 'dashboard') updateDashboard();
+    if (page === 'users') renderUsers();
 }
 
 // ============================================
-// 4. عمليات الحسابات
+// 3. عمليات الحسابات (API)
 // ============================================
 
 // إنشاء حساب
-function handleSignup(e) {
+async function handleSignup(e) {
     e.preventDefault();
     
     const name = document.getElementById('signupName').value.trim();
     const email = document.getElementById('signupEmail').value.trim();
     const password = document.getElementById('signupPassword').value;
     const messageEl = document.getElementById('signupMessage');
+    const btn = e.target.querySelector('.btn-login');
     
+    // التحقق من الحقول
     if (!name || !email || !password) {
-        showMessage(messageEl, 'جميع الحقول مطلوبة', 'error');
+        showMessage(messageEl, '⚠️ جميع الحقول مطلوبة', 'error');
         return;
     }
     
-    if (findUserByEmail(email)) {
-        showMessage(messageEl, '❌ هذا البريد مستخدم مسبقاً', 'error');
+    if (name.length < 2) {
+        showMessage(messageEl, '⚠️ الاسم يجب أن يكون حرفين على الأقل', 'error');
         return;
     }
     
-    const newUser = {
-        id: idCounter++,
-        name,
-        email,
-        password,
-        createdAt: new Date().toISOString()
-    };
-    
-    users.push(newUser);
-    saveData();
-    
-    showMessage(messageEl, `✅ تم إنشاء الحساب بنجاح! مرحباً ${name}`, 'success');
-    document.getElementById('signupForm').reset();
-    updateNav();
-    renderUsers();
-}
-
-// تسجيل دخول
-function handleLogin(e) {
-    e.preventDefault();
-    
-    const email = document.getElementById('loginEmail').value.trim();
-    const password = document.getElementById('loginPassword').value;
-    const messageEl = document.getElementById('loginMessage');
-    
-    if (!email || !password) {
-        showMessage(messageEl, '❌ البريد وكلمة المرور مطلوبة', 'error');
+    if (password.length < 3) {
+        showMessage(messageEl, '⚠️ كلمة المرور يجب أن تكون 3 أحرف على الأقل', 'error');
         return;
     }
     
-    const user = findUserByEmail(email);
-    if (!user || user.password !== password) {
-        showMessage(messageEl, '❌ بريد أو كلمة مرور خاطئة', 'error');
-        return;
-    }
+    // تعطيل الزر
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإنشاء...';
     
-    currentUser = user;
-    saveData();
-    
-    showMessage(messageEl, `✅ مرحباً ${user.name}، تم تسجيل الدخول بنجاح`, 'success');
-    document.getElementById('loginForm').reset();
-    updateNav();
-    showPage('dashboard');
-}
-
-// تسجيل خروج
-function logout() {
-    if (!confirm('هل أنت متأكد من تسجيل الخروج؟')) return;
-    
-    currentUser = null;
-    saveData();
-    updateNav();
-    showPage('home');
-    
-    // تنظيف الرسائل
-    document.querySelectorAll('.message').forEach(el => {
-        el.style.display = 'none';
-        el.className = 'message';
-    });
-}
-
-// حذف الحساب
-function handleDeleteAccount() {
-    if (!currentUser) {
-        alert('يجب تسجيل الدخول أولاً');
-        return;
-    }
-    
-    if (!confirm(`هل أنت متأكد من حذف حساب "${currentUser.name}" نهائياً؟`)) return;
-    
-    const index = users.findIndex(u => u.id === currentUser.id);
-    if (index !== -1) {
-        users.splice(index, 1);
-        currentUser = null;
-        saveData();
-        updateNav();
-        showPage('home');
-        alert('✅ تم حذف الحساب بنجاح');
-    }
-}
-
-// عرض رسالة
-function showMessage(el, text, type) {
-    el.textContent = text;
-    el.className = `message ${type}`;
-    el.style.display = 'block';
-}
-
-// ============================================
-// 5. عرض المستخدمين
-// ============================================
-function renderUsers() {
-    const container = document.getElementById('usersList');
-    
-    if (users.length === 0) {
-        container.innerHTML = '<div class="empty-state">📭 لا يوجد مستخدمين مسجلين</div>';
-        return;
-    }
-    
-    container.innerHTML = users.map(user => `
-        <div class="user-item">
-            <div class="user-info">
-                <span class="user-name">👤 ${user.name}</span>
-                <span class="user-email">📧 ${user.email}</span>
-                <span class="user-id">🆔 #${user.id}</span>
-                <span class="user-date">📅 ${formatDate(user.createdAt)}</span>
-            </div>
-            ${currentUser && currentUser.id === user.id ? `
-                <div class="user-actions">
-                    <span style="background:#f0fff4;color:#38a169;padding:4px 12px;border-radius:30px;font-size:12px;">أنت</span>
-                </div>
-            ` : `
-                <div class="user-actions">
-                    <button class="btn-sm danger" onclick="deleteUser(${user.id})">🗑️</button>
-                </div>
-            `}
-        </div>
-    `).join('');
-    
-    document.getElementById('usersCount').textContent = users.length;
-}
-
-// حذف مستخدم من قبل المسؤول (حذف أي مستخدم)
-function deleteUser(id) {
-    if (!currentUser) {
-        alert('يجب تسجيل الدخول أولاً');
-        return;
-    }
-    
-    const user = findUserById(id);
-    if (!user) return;
-    
-    if (!confirm(`هل أنت متأكد من حذف المستخدم "${user.name}"؟`)) return;
-    
-    const index = users.findIndex(u => u.id === id);
-    if (index !== -1) {
-        users.splice(index, 1);
-        // إذا كان المحذوف هو المستخدم الحالي
-        if (currentUser && currentUser.id === id) {
-            currentUser = null;
+    try {
+        // محاكاة تأخير الشبكة
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // التحقق من وجود البريد
+        if (findUserByEmail(email)) {
+            showMessage(messageEl, '❌ هذا البريد مستخدم مسبقاً', 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-user-plus"></i> إنشاء حساب';
+            return;
         }
+        
+        // إنشاء المستخدم
+        const newUser = {
+            id: idCounter++,
+            name,
+            email,
+            password,
+            createdAt: new Date().toISOString()
+        };
+        
+        users.push(newUser);
         saveData();
-        renderUsers();
-        updateNav();
-        alert('✅ تم حذف المستخدم');
-    }
-}
-
-// ============================================
-// 6. لوحة التحكم
-// ============================================
-function updateDashboard() {
-    if (!currentUser) {
-        showPage('home');
-        return;
-    }
-    
-    document.getElementById('dashName').textContent = currentUser.name;
-    document.getElementById('dashEmail').textContent = currentUser.email;
-    document.getElementById('dashId').textContent = `#${currentUser.id}`;
-    document.getElementById('dashDate').textContent = formatDate(currentUser.createdAt);
-}
-
-// ============================================
-// 7. تهيئة التطبيق
-// ============================================
-function init() {
-    loadData();
-    updateNav();
-    renderUsers();
-    showPage('home');
-}
-
-// تشغيل عند تحميل الصفحة
-document.addEventListener('DOMContentLoaded', init);
+        
+        showMessage(messageEl, `✅ تم إنشاء الحساب بنجاح! مرحباً ${name} 🎉`, 'success');
+        document.getElementById('signupForm').reset();
+        
+        // إعادة تعيين الزر
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-user-plus"></i> إنشاء حساب';
+        
+        // الانتقال لتسجيل الدخول بعد ثانيتين
+        setTimeout(() => {
+            showPage('login');
+            document.getElementById('loginEmail').value = email;
+            document.getElementById('loginPassword').value = password;
+            showMessage(document.getElementById('loginMessage'), '🎉 تم إنشاء الحساب! يمكنك تسجيل الدخول الآن', 'success');
+        }, 1500);
+        
+    } catch (error) {
+        showMessage(messageEl, '❌ حدث خطأ، حاول مرة أخرى', 'error
